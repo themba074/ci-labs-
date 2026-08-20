@@ -1,4 +1,4 @@
-name: Multi-Job CI
+name: CI
 
 on:
   push:
@@ -11,99 +11,19 @@ on:
 
   workflow_dispatch:
 
-env:
-  APP_NAME: ci-labs
-  NODE_VERSION: '20'
-
 jobs:
-  lint:
-    name: Lint Code
-    runs-on: ubuntu-latest
+  ci:
+    name: Build and Test
+    uses: ./.github/workflows/reusable-build.yml
+    with:
+      node-version: '20'
+      run-lint: true
+    secrets: inherit
 
-    steps:
-      - uses: actions/checkout@v4
-
-      - run: echo "Checking code style..."
-
-      - run: echo "Lint passed!"
-
-  test:
-    name: Test (Node ${{ matrix.node-version }}, ${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      fail-fast: false
-
-      matrix:
-        os:
-          - ubuntu-latest
-          - windows-latest
-
-        node-version:
-          - '18'
-          - '20'
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: npm
-
-      - run: npm ci
-
-      - run: npm test
-
-  security-scan:
-    name: Security Scan
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - run: echo "Scanning for vulnerabilities..."
-
-      - run: echo "No vulnerabilities found!"
-
-  build:
-    name: Build Application
-    runs-on: ubuntu-latest
-
-    needs:
-      - lint
-      - test
-      - security-scan
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - run: npm run build
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: app-build
-          path: dist/
-
-  notify:
-    name: Deploy Notification
-    runs-on: ubuntu-latest
-
-    needs:
-      - build
-
-    if: github.ref == 'refs/heads/main'
-
-    environment: production
-
-    steps:
-      - run: echo "Deploying ${{ env.APP_NAME }}..."
-
-      - name: Use secret
-        env:
-          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
-        run: echo "Token length is ${#DEPLOY_TOKEN} characters"
+  ci-node18:
+    name: Build and Test (Node 18)
+    uses: ./.github/workflows/reusable-build.yml
+    with:
+      node-version: '18'
+      run-lint: false
+    secrets: inherit
