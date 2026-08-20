@@ -4,5 +4,8 @@
   "scripts": {
     "build": "echo \"Build complete!\" && mkdir -p dist && cp index.js dist/",
     "test": "node test.js"
+  },
+  "dependencies": {
+    "lodash": "^4.18.1"
   }
 }
